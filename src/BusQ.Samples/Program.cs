@@ -13,13 +13,6 @@ namespace BusQ.Samples
     {
         static void Main(string[] args)
         {
-            Sample2();
-
-            Sample1();
-        }
-
-        private static void Sample2()
-        {
             //Create the listener
             var listener = new Listener();
 
@@ -37,47 +30,6 @@ namespace BusQ.Samples
 
             listener.Stop();
             listener.Dispose();
-        }
-
-        private static void Sample1()
-        {
-            //Setup the listener
-            //var listenerSettings = new ListenerSettings()
-            //{
-            //    //This case a topic with a subscription
-            //    QueueOrTopicPath = "DataCollectionTopic",
-            //    ReceiveMode = ReceiveMode.ReceiveAndDelete,
-            //    SubscriptionName = "SystemManagerSub"
-            //};
-
-            ////Setup the connection to Azure
-            //var connSettings = new ConnectionSettings()
-            //{
-            //    IssuerName = "owner",
-            //    IssuerSecretKey = "33131654987=",
-            //    ServiceBusNamespace = "CloudTestHost",
-            //    ServicePath = null,
-            //    ServiceUriSchema = "sb"
-            //};
-
-            ////Create an event publisher to consume events base on Reactive Extensions
-            //var eventPublisher = new EventPublisher();
-
-            //eventPublisher.GetEvent<MessageReceivedEvent>()
-            //    .Subscribe<MessageReceivedEvent>(x =>
-            //    {
-            //        Console.WriteLine(x.Timestamp.ToString());
-            //        Console.WriteLine(x.Message.ToString());
-            //    });
-
-            ////Create the listener
-            //Listener listener = ListenerFactory.Create(listenerSettings, connSettings, eventPublisher);
-            //listener.Start();
-
-            //Console.ReadLine();
-
-            //Stop it when you are done
-            //listener.Stop();
         }
     }
 }
