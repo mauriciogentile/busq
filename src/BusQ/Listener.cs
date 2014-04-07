@@ -23,6 +23,8 @@ namespace Ringo.BusQ
         readonly static object statusLock = new object();
         readonly static Dictionary<string, IMessageReceiver<T>> _receivers = new Dictionary<string, IMessageReceiver<T>>();
 
+        CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
         internal IEventBus EventBus { get; set; }
         internal ListenerSettings ListenerSettings { get; set; }
         internal ConnectionSettings ConnectionSettings { get; set; }
@@ -49,22 +51,30 @@ namespace Ringo.BusQ
             EventBus = eventPublisher ?? new DefaultEventBus();
             MessagingFactory = messagingFactory;
             Status = ListenerStatus.NotStarted;
-            OnDispose = () => MessagingFactory.Close();
+            OnDispose = () =>
+            {
+                MessagingFactory.Close();
+                if (_cancellationTokenSource != null)
+                    _cancellationTokenSource.Dispose();
+            };
         }
 
         public void Start()
         {
             ChangeStatus(ListenerStatus.Running);
-            Task.Factory.StartNew(Listen);
+            _cancellationTokenSource = new CancellationTokenSource();
+            Task.Factory.StartNew(Listen, _cancellationTokenSource.Token);
         }
 
         public void Stop()
         {
+            _cancellationTokenSource.Cancel();
             ChangeStatus(ListenerStatus.Stopped);
         }
 
         public void Pause()
         {
+            _cancellationTokenSource.Cancel();
             ChangeStatus(ListenerStatus.Paused);
         }
 
@@ -119,7 +129,7 @@ namespace Ringo.BusQ
 
         void ListenInternal()
         {
-            while (Status == ListenerStatus.Running)
+            while (Status == ListenerStatus.Running && !_cancellationTokenSource.IsCancellationRequested)
             {
                 try
                 {
@@ -144,7 +154,7 @@ namespace Ringo.BusQ
                 {
                     return;
                 }
-                if ((newStatus == ListenerStatus.Paused || newStatus == ListenerStatus.Stopped) 
+                if ((newStatus == ListenerStatus.Paused || newStatus == ListenerStatus.Stopped)
                     && Status != ListenerStatus.Running)
                 {
                     throw new InvalidOperationException("Listener is not running");

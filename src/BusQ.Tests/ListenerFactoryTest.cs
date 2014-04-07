@@ -1,10 +1,10 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using NUnit.Framework;
 using Ringo.BusQ.Events;
 using Moq;
 
 namespace Ringo.BusQ.Tests
 {
-    [TestClass()]
+    [TestFixture]
     public class ListenerFactoryTest : TestBase
     {
         const string QueueName = "queueName";
@@ -18,7 +18,7 @@ namespace Ringo.BusQ.Tests
         ConnectionSettings _connSettings;
         IEventBus _eventPublisher;
 
-        [TestInitialize]
+        [SetUp]
         public void Setup()
         {
             _settings = CreateDefaultSettings();
@@ -26,7 +26,7 @@ namespace Ringo.BusQ.Tests
             _eventPublisher = new DefaultEventBus();
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerFactory_Create_Test()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(QueueName, IssuerName, IssuerKey, ServiceBusNamespace, 
@@ -39,7 +39,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(_eventPublisher, target.EventBus);
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerFactory_Create_Test1()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(_settings, _connSettings, _eventPublisher);
@@ -49,7 +49,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(_eventPublisher, target.EventBus);
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerFactory_Create_Test2()
         {
             var receiver = new Mock<IMessageReceiver<Order>>().Object;
@@ -62,7 +62,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(receiver, target.MessageReceiver);
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerFactory_Create_Test3()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(TopicName, SubscriptionName, IssuerName, IssuerKey, ServiceBusNamespace, _eventPublisher);
@@ -75,7 +75,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(_eventPublisher, target.EventBus);
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerFactory_Create_Test4()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(QueueName, _connSettings, _eventPublisher);
@@ -85,7 +85,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(_eventPublisher, target.EventBus);
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerFactory_Create_Test5()
         {
             var receiver = new Mock<IMessageReceiver<Order>>().Object;
@@ -98,7 +98,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(receiver, target.MessageReceiver);
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerFactory_Create_Test6()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(TopicName, SubscriptionName, _connSettings, 
@@ -111,7 +111,7 @@ namespace Ringo.BusQ.Tests
         }
 
 
-        [TestMethod]
+        [Test]
         public void ListenerFactory_Create_Test7()
         {
             var receiver = new Mock<IMessageReceiver<Order>>().Object;

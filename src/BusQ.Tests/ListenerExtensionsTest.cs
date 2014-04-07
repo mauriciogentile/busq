@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using NUnit.Framework;
 using System;
 using Moq;
 using System.Threading;
@@ -9,14 +9,14 @@ namespace Ringo.BusQ.Tests
     ///This is a test class for ListenerExtensionsTest and is intended
     ///to contain all ListenerExtensionsTest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestFixture]
     public class ListenerExtensionsTest : TestBase
     {
         ListenerSettings _listenerSettings;
         ConnectionSettings _connSettings;
         IMessageReceiver<Order> _receiver;
 
-        [TestInitialize]
+        [SetUp]
         public void Setup()
         {
             _listenerSettings = CreateDefaultSettings();
@@ -24,7 +24,7 @@ namespace Ringo.BusQ.Tests
             _receiver = CreateLocalReceiver(() => new Order());
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerExtensionsTest_Subscribe_StatusChangedEvent()
         {
             bool onNextCalled = false;
@@ -41,7 +41,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(true, onNextCalled);
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerExtensionsTest_Subscribe_MessageReceivedEvent()
         {
             bool onNextCalled = false;
@@ -61,7 +61,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(true, onNextCalled);
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerExtensionsTest_Subscribe_ReceptionErrorEvent()
         {
             var moq = new Mock<IMessageReceiver<Order>>();

@@ -1,12 +1,11 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Microsoft.ServiceBus.Messaging;
 using Moq;
 using System.Threading;
 
 namespace Ringo.BusQ.Tests
 {
-    [TestClass()]
     public class TestBase
     {
         public TestContext TestContext { get; set; }

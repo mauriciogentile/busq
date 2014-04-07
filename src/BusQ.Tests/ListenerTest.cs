@@ -1,13 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using Microsoft.ServiceBus.Messaging;
 using System.Threading;
 using Ringo.BusQ.Events;
 using Moq;
+using NUnit.Framework;
 
 namespace Ringo.BusQ.Tests
 {
-    [TestClass()]
+    [TestFixture]
     public class ListenerTest : TestBase
     {
         ListenerSettings _listenerSettings;
@@ -15,7 +15,7 @@ namespace Ringo.BusQ.Tests
         IMessageReceiver<Order> _receiver;
         IEventBus _eventPublisher;
 
-        [TestInitialize]
+        [SetUp]
         public void Setup()
         {
             _listenerSettings = CreateDefaultSettings();
@@ -24,7 +24,7 @@ namespace Ringo.BusQ.Tests
             _eventPublisher = new DefaultEventBus();
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(InvalidOperationException))]
         public void Listener_Should_Pause()
         {
@@ -35,16 +35,18 @@ namespace Ringo.BusQ.Tests
             target.Pause();
         }
 
-        [TestMethod]
+        [Test]
         public void Listener_Should_ListenerResume()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
                 _receiver, _eventPublisher);
             target.Resume();
             Assert.AreEqual(ListenerStatus.Running, target.Status);
+            Thread.Sleep(Constants.OneSecond);
+            target.Stop();
         }
 
-        [TestMethod]
+        [Test]
         public void Listener_Should_Start_And_Stop()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
@@ -58,7 +60,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(ListenerStatus.Stopped, target.Status);
         }
 
-        [TestMethod]
+        [Test]
         public void Listener_Should_Start_And_Stop_And_Call_EventAgregator_Publish_StatusChangedEvent()
         {
             var moq = new Mock<IEventBus>();
@@ -77,7 +79,7 @@ namespace Ringo.BusQ.Tests
             moq.Verify(x => x.Publish(It.IsAny<StatusChangedEvent>()), Times.Exactly(2));
         }
 
-        [TestMethod]
+        [Test]
         public void Listener_Should_Start_And_Stop_And_Call_EventAgregator_Publish_MessageReceivedEvent()
         {
             var moq = new Mock<IEventBus>();
@@ -96,7 +98,7 @@ namespace Ringo.BusQ.Tests
             moq.Verify(x => x.Publish(It.IsAny<Order>()), Times.AtLeastOnce());
         }
 
-        [TestMethod]
+        [Test]
         public void Listener_Should_Start_And_Stop_And_Call_EventAgregator_Publish_ReceptionErrorEvent()
         {
             var moq = new Mock<IMessageReceiver<Order>>();
@@ -119,7 +121,7 @@ namespace Ringo.BusQ.Tests
             moq2.Verify(x => x.Publish(It.IsAny<ReceptionErrorEvent>()), Times.AtLeastOnce());
         }
 
-        [TestMethod]
+        [Test]
         public void Listener_Should_Start_And_Stop_And_Call_MessagingFactory_CreateMessageReceiver()
         {
             var moq1 = new Mock<IMessagingFactory>();
@@ -139,7 +141,7 @@ namespace Ringo.BusQ.Tests
             moq1.Verify(x => x.CreateMessageReceiver<Order>(It.IsAny<string>(), It.IsAny<ReceiveMode>()), Times.Once());
         }
 
-        [TestMethod]
+        [Test]
         public void Listener_Should_Start_And_Pause()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
@@ -153,7 +155,7 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(ListenerStatus.Paused, target.Status);
         }
 
-        [TestMethod]
+        [Test]
         public void Listener_Should_Start_Pause_And_Resume()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
@@ -169,25 +171,34 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(ListenerStatus.Running, target.Status);
         }
 
-        [TestMethod]
+        [Test]
         public void Listener_Should_Start_Pause_Resume_And_Stop()
         {
             Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
                 _receiver, _eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
+
             target.Start();
+
             Assert.AreEqual(ListenerStatus.Running, target.Status);
+
             Thread.Sleep(Constants.OneSecond);
+
             target.Pause();
+
             Assert.AreEqual(ListenerStatus.Paused, target.Status);
+
             target.Resume();
+
             Assert.AreEqual(ListenerStatus.Running, target.Status);
+
             target.Stop();
+
             Assert.AreEqual(ListenerStatus.Stopped, target.Status);
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(InvalidOperationException))]
         public void Listener_Should_Stop()
         {
