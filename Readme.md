@@ -18,7 +18,7 @@ listener
     .Set(queueName: "MyQueue")
     .OnStatusChanged(x => Console.WriteLine("Listener status changed to " + x.NewStatus))
     .OnError(x => Console.WriteLine("An error here! " + x.Error))
-    .Where(x => x.CreatedDate > DateTime.Now.AddDays(-1)) //Subscribe to order since yesterday only
+    .Where(x => x.CreatedDate > DateTime.Now.AddDays(-1)) //Subscribe to orders since yesterday only
     .Subscribe();
 
 listener.Start();
