@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>BusQ</id>
+    <version>0.9.1</version>
+    <authors>Mauri Gentile</authors>
+    <owners>Mauri Gentile</owners>
+    <licenseUrl>https://github.com/mauriciogentile/busq/Licence.txt</licenseUrl>
+    <projectUrl>https://github.com/mauriciogentile/busq</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>BusQ is a .NET component that makes easier for developers to work with Azure Service Bus Queues</description>
+    <releaseNotes>First version.</releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>Azure Queues Messaging Rx Reactive</tags>
+    <dependencies>
+      <dependency id="WindowsAzure.ServiceBus" version="2.3.0.0" />
+      <dependency id="Rx-Main" version="2.2.2" />
+    </dependencies>
+  </metadata>
+</package>
