@@ -21,9 +21,9 @@ namespace Ringo.BusQ.Tests
             ListenerSettings listenerSettings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = CreateLocalReceiver();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Pause();
         }
@@ -34,9 +34,9 @@ namespace Ringo.BusQ.Tests
             ListenerSettings listenerSettings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = CreateLocalReceiver();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
             target.Resume();
             Assert.AreEqual(ListenerStatus.Running, target.Status);
         }
@@ -47,9 +47,9 @@ namespace Ringo.BusQ.Tests
             ListenerSettings listenerSettings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = CreateLocalReceiver();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
@@ -65,11 +65,11 @@ namespace Ringo.BusQ.Tests
             ListenerSettings listenerSettings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = CreateLocalReceiver();
-            var moq = new Mock<IEventPublisher>();
+            var moq = new Mock<IEventBus>();
             moq.Setup(x => x.Publish(It.IsAny<StatusChangedEvent>()));
-            IEventPublisher eventPublisher = moq.Object;
+            IEventBus eventPublisher = moq.Object;
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
@@ -87,11 +87,11 @@ namespace Ringo.BusQ.Tests
             ListenerSettings listenerSettings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = CreateLocalReceiver();
-            var moq = new Mock<IEventPublisher>();
-            moq.Setup(x => x.Publish(It.IsAny<MessageReceivedEvent>()));
-            IEventPublisher eventPublisher = moq.Object;
+            var moq = new Mock<IEventBus>();
+            moq.Setup(x => x.Publish(It.IsAny<MessageReceivedEvent<Order>>()));
+            IEventBus eventPublisher = moq.Object;
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
@@ -100,7 +100,7 @@ namespace Ringo.BusQ.Tests
             target.Stop();
             Assert.AreEqual(ListenerStatus.Stopped, target.Status);
 
-            moq.Verify(x => x.Publish(It.IsAny<MessageReceivedEvent>()), Times.AtLeastOnce());
+            moq.Verify(x => x.Publish(It.IsAny<MessageReceivedEvent<Order>>()), Times.AtLeastOnce());
         }
 
         [TestMethod()]
@@ -113,11 +113,11 @@ namespace Ringo.BusQ.Tests
             moq.Setup(x => x.Receive()).Throws<ApplicationException>();
             IMessageReceiver receiver = moq.Object;
 
-            var moq2 = new Mock<IEventPublisher>();
-            moq2.Setup(x => x.Publish(It.IsAny<MessageReceivedEvent>()));
-            IEventPublisher eventPublisher = moq2.Object;
+            var moq2 = new Mock<IEventBus>();
+            moq2.Setup(x => x.Publish(It.IsAny<MessageReceivedEvent<Order>>()));
+            IEventBus eventPublisher = moq2.Object;
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
@@ -141,9 +141,9 @@ namespace Ringo.BusQ.Tests
             moq1.Setup(x => x.CreateMessageReceiver(It.IsAny<string>(), It.IsAny<ReceiveMode>())).Returns(receiver2);
             IMessagingFactory messagingFactory = moq1.Object;
 
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher, messagingFactory);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher, messagingFactory);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
@@ -161,9 +161,9 @@ namespace Ringo.BusQ.Tests
             ListenerSettings listenerSettings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = CreateLocalReceiver();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
@@ -179,9 +179,9 @@ namespace Ringo.BusQ.Tests
             ListenerSettings listenerSettings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = CreateLocalReceiver();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
@@ -199,9 +199,9 @@ namespace Ringo.BusQ.Tests
             ListenerSettings listenerSettings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = CreateLocalReceiver();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
@@ -222,9 +222,9 @@ namespace Ringo.BusQ.Tests
             ListenerSettings listenerSettings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = CreateLocalReceiver();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
             target.Stop();
         }
     }

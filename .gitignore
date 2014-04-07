@@ -1,0 +1,9 @@
+/src/BusQ.Samples/bin
+/src/BusQ.Samples/obj
+/src/BusQ.Tests/bin
+/src/BusQ.Tests/obj
+/src/BusQ/bin
+/src/BusQ/obj
+/src/packages
+/src/TestResults
+/src/*.suo

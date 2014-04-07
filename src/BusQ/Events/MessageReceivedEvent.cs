@@ -6,8 +6,8 @@ using Microsoft.ServiceBus.Messaging;
 
 namespace Ringo.BusQ.ServiceBus.Messaging.Events
 {
-    public class MessageReceivedEvent : EventBase
+    public class MessageReceivedEvent<T> : EventBase
     {
-        public BrokeredMessage Message { get; set; }
+        public T Message { get; set; }
     }
 }

@@ -18,15 +18,15 @@ namespace Ringo.BusQ.Tests
             string issuerName = "issuerName";
             string issuerKey = "issuerKey";
             string serviceBusNamespace = "serviceBusNamespace";
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(queueName, issuerName, issuerKey, serviceBusNamespace, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(queueName, issuerName, issuerKey, serviceBusNamespace, eventPublisher);
 
             Assert.AreEqual(queueName, target.ListenerSettings.QueueOrTopicPath);
             Assert.AreEqual(issuerName, target.ConnectionSettings.IssuerName);
             Assert.AreEqual(issuerKey, target.ConnectionSettings.IssuerSecretKey);
             Assert.AreEqual(serviceBusNamespace, target.ConnectionSettings.ServiceBusNamespace);
-            Assert.AreEqual(eventPublisher, target.EventPublisher);
+            Assert.AreEqual(eventPublisher, target.EventBus);
         }
 
         [TestMethod()]
@@ -34,13 +34,13 @@ namespace Ringo.BusQ.Tests
         {
             ListenerSettings settings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(settings, connSettings, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(settings, connSettings, eventPublisher);
 
             Assert.AreEqual(settings, target.ListenerSettings);
             Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventPublisher);
+            Assert.AreEqual(eventPublisher, target.EventBus);
         }
 
         [TestMethod()]
@@ -48,14 +48,14 @@ namespace Ringo.BusQ.Tests
         {
             ListenerSettings settings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
             IMessageReceiver receiver = new Mock<IMessageReceiver>().Object;
 
-            Listener target = ListenerFactory.Create(settings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(settings, connSettings, receiver, eventPublisher);
 
             Assert.AreEqual(settings, target.ListenerSettings);
             Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventPublisher);
+            Assert.AreEqual(eventPublisher, target.EventBus);
             Assert.AreEqual(receiver, target.MessageReceiver);
         }
 
@@ -67,16 +67,16 @@ namespace Ringo.BusQ.Tests
             string issuerName = "issuerName";
             string issuerKey = "issuerKey";
             string serviceBusNamespace = "serviceBusNamespace";
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(topicName, subscriptionName, issuerName, issuerKey, serviceBusNamespace, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(topicName, subscriptionName, issuerName, issuerKey, serviceBusNamespace, eventPublisher);
 
             Assert.AreEqual(topicName, target.ListenerSettings.QueueOrTopicPath);
             Assert.AreEqual(subscriptionName, target.ListenerSettings.SubscriptionName);
             Assert.AreEqual(issuerName, target.ConnectionSettings.IssuerName);
             Assert.AreEqual(issuerKey, target.ConnectionSettings.IssuerSecretKey);
             Assert.AreEqual(serviceBusNamespace, target.ConnectionSettings.ServiceBusNamespace);
-            Assert.AreEqual(eventPublisher, target.EventPublisher);
+            Assert.AreEqual(eventPublisher, target.EventBus);
         }
 
         [TestMethod()]
@@ -84,13 +84,13 @@ namespace Ringo.BusQ.Tests
         {
             string queueName = "queueName";
             ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(queueName, connSettings, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(queueName, connSettings, eventPublisher);
 
             Assert.AreEqual(queueName, target.ListenerSettings.QueueOrTopicPath);
             Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventPublisher);
+            Assert.AreEqual(eventPublisher, target.EventBus);
         }
 
         [TestMethod()]
@@ -99,13 +99,13 @@ namespace Ringo.BusQ.Tests
             string queueName = "queueName";
             ConnectionSettings connSettings = CreateDefaultConnection();
             IMessageReceiver receiver = new Mock<IMessageReceiver>().Object;
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(queueName, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(queueName, connSettings, receiver, eventPublisher);
 
             Assert.AreEqual(queueName, target.ListenerSettings.QueueOrTopicPath);
             Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventPublisher);
+            Assert.AreEqual(eventPublisher, target.EventBus);
             Assert.AreEqual(receiver, target.MessageReceiver);
         }
 
@@ -115,14 +115,14 @@ namespace Ringo.BusQ.Tests
             string topicName = "topicName";
             string subscriptionName = "subscriptionName";
             ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
 
-            Listener target = ListenerFactory.Create(topicName, subscriptionName, connSettings, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(topicName, subscriptionName, connSettings, eventPublisher);
 
             Assert.AreEqual(topicName, target.ListenerSettings.QueueOrTopicPath);
             Assert.AreEqual(subscriptionName, target.ListenerSettings.SubscriptionName);
             Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventPublisher);
+            Assert.AreEqual(eventPublisher, target.EventBus);
         }
 
 
@@ -131,15 +131,15 @@ namespace Ringo.BusQ.Tests
         {
             ListenerSettings settings = CreateDefaultSettings();
             ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventPublisher eventPublisher = new EventPublisher();
+            IEventBus eventPublisher = new EventPublisher();
             IMessageReceiver receiver = new Mock<IMessageReceiver>().Object;
             IMessagingFactory factory = new Mock<IMessagingFactory>().Object;
 
-            Listener target = ListenerFactory.Create(settings, connSettings, receiver, eventPublisher, factory);
+            Listener<Order> target = ListenerFactory<Order>.Create(settings, connSettings, receiver, eventPublisher, factory);
 
             Assert.AreEqual(settings, target.ListenerSettings);
             Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventPublisher);
+            Assert.AreEqual(eventPublisher, target.EventBus);
             Assert.AreEqual(receiver, target.MessageReceiver);
             Assert.AreEqual(factory, target.MessagingFactory);
         }

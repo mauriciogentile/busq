@@ -8,9 +8,9 @@ using Ringo.BusQ.ServiceBus.Messaging.Events;
 
 namespace Ringo.BusQ.ServiceBus.Messaging
 {
-    internal static class ListenerFactory
+    internal static class ListenerFactory<T>
     {
-        public static Listener Create(string queueName, ConnectionSettings connSettings, IEventPublisher eventPublisher = null)
+        public static Listener<T> Create(string queueName, ConnectionSettings connSettings, IEventBus eventPublisher = null)
         {
             var settings = new ListenerSettings()
             {
@@ -20,7 +20,7 @@ namespace Ringo.BusQ.ServiceBus.Messaging
             return Create(settings, connSettings, eventPublisher);
         }
 
-        public static Listener Create(string queueName, ConnectionSettings connSettings, IMessageReceiver receiver, IEventPublisher eventPublisher = null)
+        public static Listener<T> Create(string queueName, ConnectionSettings connSettings, IMessageReceiver receiver, IEventBus eventPublisher = null)
         {
             var settings = new ListenerSettings()
             {
@@ -30,7 +30,7 @@ namespace Ringo.BusQ.ServiceBus.Messaging
             return Create(settings, connSettings, receiver, eventPublisher);
         }
 
-        public static Listener Create(string topicName, string subscriptionName, ConnectionSettings connSettings, IEventPublisher eventPublisher = null)
+        public static Listener<T> Create(string topicName, string subscriptionName, ConnectionSettings connSettings, IEventBus eventPublisher = null)
         {
             var settings = new ListenerSettings()
             {
@@ -41,7 +41,7 @@ namespace Ringo.BusQ.ServiceBus.Messaging
             return Create(settings, connSettings, eventPublisher);
         }
 
-        public static Listener Create(string topicName, string subscriptionName, string issuerName, string issuerKey, string serviceBusNamespace, IEventPublisher eventPublisher = null)
+        public static Listener<T> Create(string topicName, string subscriptionName, string issuerName, string issuerKey, string serviceBusNamespace, IEventBus eventPublisher = null)
         {
             var settings = new ListenerSettings()
             {
@@ -59,7 +59,7 @@ namespace Ringo.BusQ.ServiceBus.Messaging
             return Create(settings, connSettings, eventPublisher);
         }
 
-        public static Listener Create(string queueName, string issuerName, string issuerKey, string serviceBusNamespace, IEventPublisher eventPublisher = null)
+        public static Listener<T> Create(string queueName, string issuerName, string issuerKey, string serviceBusNamespace, IEventBus eventPublisher = null)
         {
             var settings = new ListenerSettings()
             {
@@ -76,19 +76,19 @@ namespace Ringo.BusQ.ServiceBus.Messaging
             return Create(settings, connSettings, eventPublisher);
         }
 
-        public static Listener Create(ListenerSettings settings, ConnectionSettings connSettings, IEventPublisher eventPublisher)
+        public static Listener<T> Create(ListenerSettings settings, ConnectionSettings connSettings, IEventBus eventPublisher)
         {
-            return new Listener(settings, connSettings, null, eventPublisher, null);
+            return new Listener<T>(settings, connSettings, null, eventPublisher, null);
         }
 
-        public static Listener Create(ListenerSettings settings, ConnectionSettings connSettings, IMessageReceiver receiver, IEventPublisher eventPublisher = null)
+        public static Listener<T> Create(ListenerSettings settings, ConnectionSettings connSettings, IMessageReceiver receiver, IEventBus eventPublisher = null)
         {
-            return new Listener(settings, connSettings, receiver, eventPublisher, null);
+            return new Listener<T>(settings, connSettings, receiver, eventPublisher, null);
         }
 
-        public static Listener Create(ListenerSettings settings, ConnectionSettings connSettings, IMessageReceiver receiver, IEventPublisher eventPublisher, IMessagingFactory messagingFactory)
+        public static Listener<T> Create(ListenerSettings settings, ConnectionSettings connSettings, IMessageReceiver receiver, IEventBus eventPublisher, IMessagingFactory messagingFactory)
         {
-            return new Listener(settings, connSettings, receiver, eventPublisher, messagingFactory);
+            return new Listener<T>(settings, connSettings, receiver, eventPublisher, messagingFactory);
         }
     }
 }

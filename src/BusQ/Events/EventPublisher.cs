@@ -8,15 +8,9 @@ using System.Reactive.Linq;
 
 namespace Ringo.BusQ.ServiceBus.Messaging.Events
 {
-    public class EventPublisher : IEventPublisher
+    public class EventPublisher : IEventBus
     {
         private readonly ConcurrentDictionary<Type, object> subjects = new ConcurrentDictionary<Type, object>();
-
-        public IObservable<TEvent> GetEvent<TEvent>()
-        {
-            var subject = (ISubject<TEvent>)subjects.GetOrAdd(typeof(TEvent), t => new Subject<TEvent>());
-            return subject.AsObservable();
-        }
 
         public void Publish<TEvent>(TEvent eventData)
         {
@@ -26,6 +20,13 @@ namespace Ringo.BusQ.ServiceBus.Messaging.Events
                 var observer = (ISubject<TEvent>)subject;
                 observer.OnNext(eventData);
             }
+        }
+
+        public Unsubscriber<TEvent> Subscribe<TEvent>(Action<TEvent> handler)
+        {
+            var subject = (ISubject<TEvent>)subjects.GetOrAdd(typeof(TEvent), t => new Subject<TEvent>());
+            subject.AsObservable().Subscribe(handler);
+            return new Unsubscriber<TEvent>(subjects, typeof(TEvent));
         }
     }
 }

@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.ServiceBus.Messaging;
 using Microsoft.ServiceBus;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Ringo.BusQ.ServiceBus.Messaging.Events;
-using System.Reactive.Linq;
 
 namespace Ringo.BusQ.ServiceBus.Messaging
 {
@@ -20,18 +17,16 @@ namespace Ringo.BusQ.ServiceBus.Messaging
         Stopped
     }
 
-    public class Listener : IDisposable, IListener
+    public class Listener<T> : Disposable, IListener, IObservable<T>
     {
         readonly static object syncLock;
         readonly static Dictionary<string, IMessageReceiver> receivers;
-        bool disposed = false;
 
-        internal IEventPublisher EventPublisher { get; set; }
+        internal IEventBus EventBus { get; set; }
         internal ListenerSettings ListenerSettings { get; set; }
         internal ConnectionSettings ConnectionSettings { get; set; }
         internal IMessageReceiver MessageReceiver { get; set; }
         internal IMessagingFactory MessagingFactory { get; set; }
-
         public ListenerStatus Status { get; private set; }
 
         static Listener()
@@ -50,14 +45,16 @@ namespace Ringo.BusQ.ServiceBus.Messaging
         {
         }
 
-        internal Listener(ListenerSettings listenerSettings, ConnectionSettings connSettings, IMessageReceiver receiver, IEventPublisher eventPublisher, IMessagingFactory messagingFactory)
+        internal Listener(ListenerSettings listenerSettings, ConnectionSettings connSettings, IMessageReceiver receiver,
+            IEventBus eventPublisher, IMessagingFactory messagingFactory)
         {
             ListenerSettings = listenerSettings;
             ConnectionSettings = connSettings;
             MessageReceiver = receiver;
-            EventPublisher = eventPublisher == null ? new EventPublisher() : eventPublisher;
+            EventBus = eventPublisher == null ? new EventPublisher() : eventPublisher;
             MessagingFactory = messagingFactory;
             Status = ListenerStatus.NotStarted;
+            OnDispose = () => MessagingFactory.Close();
         }
 
         public void Start()
@@ -79,6 +76,11 @@ namespace Ringo.BusQ.ServiceBus.Messaging
         public void Resume()
         {
             Start();
+        }
+
+        public IDisposable Subscribe(IObserver<T> observer)
+        {
+            return EventBus.Subscribe<T>(observer.OnNext);
         }
 
         protected virtual void ReceiveMessage()
@@ -108,7 +110,10 @@ namespace Ringo.BusQ.ServiceBus.Messaging
             else
             {
                 Debug.WriteLine("Listener receiving message");
-                EventPublisher.Publish(new MessageReceivedEvent() { Message = message });
+                EventBus.Publish(new MessageReceivedEvent<T>()
+                {
+                    Message = message.GetBody<T>()
+                });
             }
         }
 
@@ -131,7 +136,10 @@ namespace Ringo.BusQ.ServiceBus.Messaging
                 catch (ThreadAbortException) { }
                 catch (Exception exc)
                 {
-                    EventPublisher.Publish(new ReceptionErrorEvent() { Error = exc });
+                    EventBus.Publish(new ReceptionErrorEvent()
+                    {
+                        Error = exc
+                    });
                 }
             }
         }
@@ -151,7 +159,7 @@ namespace Ringo.BusQ.ServiceBus.Messaging
 
                 Status = newStatus;
 
-                EventPublisher.Publish(new StatusChangedEvent() { NewStatus = Status });
+                EventBus.Publish(new StatusChangedEvent() { NewStatus = Status });
 
                 Debug.WriteLine("Listener status is '{0}'", Status);
             }
@@ -214,33 +222,5 @@ namespace Ringo.BusQ.ServiceBus.Messaging
                 return MessageReceiver;
             }
         }
-
-        #region Disposal
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                MessagingFactory.Close();
-            }
-
-            disposed = true;
-        }
-
-        ~Listener()
-        {
-            Dispose(false);
-        }
-
-        #endregion
     }
 }

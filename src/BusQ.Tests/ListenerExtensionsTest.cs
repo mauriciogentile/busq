@@ -28,11 +28,11 @@ namespace Ringo.BusQ.Tests
 
             bool onNextCalled = false;
 
-            new Listener()
-                .From(connSettings)
-                .Where(listenerSettings)
-                .Subscribe<StatusChangedEvent>(x => { onNextCalled = true; })
-                .Setup(receiver)
+            new Listener<Order>()
+                .Set(connSettings)
+                .Set(listenerSettings)
+                .Set(receiver)
+                .OnStatusChanged(x => { onNextCalled = true; })
                 .Start();
 
             Thread.Sleep(5000);
@@ -49,12 +49,15 @@ namespace Ringo.BusQ.Tests
 
             bool onNextCalled = false;
 
-            new Listener()
-                .From(connSettings)
-                .Where(listenerSettings)
-                .Subscribe<MessageReceivedEvent>(x => { onNextCalled = true; })
-                .Setup(receiver)
-                .Start();
+            var listener = new Listener<Order>();
+
+            listener
+                .Set(connSettings)
+                .Set(listenerSettings)
+                .Set(receiver)
+                .Subscribe(x => { onNextCalled = true; });
+            
+            listener.Start();
 
             Thread.Sleep(5000);
 
@@ -73,12 +76,15 @@ namespace Ringo.BusQ.Tests
 
             bool onNextCalled = false;
 
-            new Listener()
-                .From(connSettings)
-                .Where(listenerSettings)
-                .Subscribe<ReceptionErrorEvent>(x => { onNextCalled = true; })
-                .Setup(receiver)
-                .Start();
+            var listener = new Listener<Order>();
+
+            listener
+                .Set(connSettings)
+                .Set(listenerSettings)
+                .Set(receiver)
+                .OnError(x => { onNextCalled = true; });
+
+            listener.Start();
 
             Thread.Sleep(5000);
 

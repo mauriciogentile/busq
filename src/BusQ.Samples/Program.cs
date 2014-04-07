@@ -6,6 +6,7 @@ using Ringo.BusQ.ServiceBus.Messaging;
 using Ringo.BusQ.ServiceBus;
 using Ringo.BusQ.ServiceBus.Messaging.Events;
 using Microsoft.ServiceBus.Messaging;
+using System.Reactive.Linq;
 
 namespace BusQ.Samples
 {
@@ -14,15 +15,18 @@ namespace BusQ.Samples
         static void Main(string[] args)
         {
             //Create the listener
-            var listener = new Listener();
+            var listener = new Listener<Order>();
 
             //Configure the listener
-            listener.From("<your-issuer-name>", "<your-secret-key>", "<namespace>")
-                .Where(queueName: "MyQueue")
-                .Subscribe<StatusChangedEvent>(x => { Console.WriteLine("Listener status changed to " + x.NewStatus); })
-                .Subscribe<MessageReceivedEvent>(x => { Console.WriteLine("A message arrived at " + x.Timestamp); })
-                .Subscribe<ReceptionErrorEvent>(x => { Console.WriteLine("An error has been handled here?" + x.Error); })
-                .Start();
+            listener
+                .Set("<your-issuer-name>", "<your-secret-key>", "<namespace>")
+                .Set(queueName: "MyQueue")
+                .OnStatusChanged(x => Console.WriteLine("Listener status changed to " + x.NewStatus))
+                .OnError(x => Console.WriteLine("An error here! " + x.Error))
+                .Where(x => x.CreatedDate > DateTime.Now.AddDays(-1))
+                .Subscribe();
+
+            listener.Start();
 
             Console.WriteLine("Listener running...");
             Console.WriteLine("Preass any key to stop it");
