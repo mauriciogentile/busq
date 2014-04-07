@@ -85,11 +85,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BusQ\BusQ.csproj">
-      <Project>{E2600694-15A9-469F-82C3-520153478719}</Project>
+      <Project>{e2600694-15a9-469f-82c3-520153478719}</Project>
       <Name>BusQ</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />

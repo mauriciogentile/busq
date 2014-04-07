@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Ringo.BusQ.Tests
+﻿namespace Ringo.BusQ.Tests
 {
     class Constants
     {
-        public const int ListeningDefaultMilliseconds = 10000;
-        public const int ReceiverDelayMilliseconds = 1000;
+        public const int OneSecond = 1000;
+        public const int HalfSecond = 500;
     }
 }

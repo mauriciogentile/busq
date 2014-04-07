@@ -1,44 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.ServiceBus.Messaging;
 
-namespace Ringo.BusQ.ServiceBus.Messaging
+namespace Ringo.BusQ
 {
-    public class MessageReceiver : IMessageReceiver
+    public class MessageReceiver<T> : IMessageReceiver<T>
     {
-        readonly Microsoft.ServiceBus.Messaging.MessageReceiver messageReceiverCore;
+        readonly MessageReceiver _messageReceiverCore;
 
-        public MessageReceiver(Microsoft.ServiceBus.Messaging.MessageReceiver receiverCore)
+        public MessageReceiver(MessageReceiver receiverCore)
         {
-            messageReceiverCore = receiverCore;
+            _messageReceiverCore = receiverCore;
         }
 
-        public BrokeredMessage Receive()
+        public T Receive()
         {
-            return messageReceiverCore.Receive();
+            return _messageReceiverCore.Receive().GetBody<T>();
         }
 
-        public BrokeredMessage Receive(TimeSpan serverWaitTime)
+        public T Receive(TimeSpan serverWaitTime)
         {
-            return messageReceiverCore.Receive(serverWaitTime);
+            return _messageReceiverCore.Receive(serverWaitTime).GetBody<T>();
         }
 
-        public BrokeredMessage Receive(long sequenceNumber)
+        public T Receive(long sequenceNumber)
         {
-            return messageReceiverCore.Receive(sequenceNumber);
+            return _messageReceiverCore.Receive(sequenceNumber).GetBody<T>();
         }
 
         public bool IsClosed
         {
-            get { return messageReceiverCore.IsClosed; }
+            get { return _messageReceiverCore.IsClosed; }
         }
 
         public void Close()
         {
-            if (!messageReceiverCore.IsClosed)
-                messageReceiverCore.Close();
+            if (!_messageReceiverCore.IsClosed)
+                _messageReceiverCore.Close();
         }
     }
 }

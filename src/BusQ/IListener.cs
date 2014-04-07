@@ -1,5 +1,4 @@
-﻿using System;
-namespace Ringo.BusQ.ServiceBus.Messaging
+﻿namespace Ringo.BusQ
 {
     public interface IListener
     {

@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Ringo.BusQ.ServiceBus;
-using Ringo.BusQ.ServiceBus.Messaging;
 using Microsoft.ServiceBus.Messaging;
 using Moq;
 using System.Threading;
@@ -42,26 +37,26 @@ namespace Ringo.BusQ.Tests
             return connSettings;
         }
 
-        public static IMessageReceiver CreateLocalReceiver()
+        public static IMessageReceiver<T> CreateLocalReceiver<T>(Func<T> generator)
         {
-            BrokeredMessage message = new BrokeredMessage(Guid.Empty);
+            T message = generator();
 
-            var moq = new Mock<IMessageReceiver>();
-            moq.Setup(x => x.Receive()).Returns(() => { Thread.Sleep(Constants.ReceiverDelayMilliseconds); return message; });
-            moq.Setup(x => x.Receive(It.IsAny<TimeSpan>())).Returns(() => { Thread.Sleep(Constants.ReceiverDelayMilliseconds); return message; });
-            moq.Setup(x => x.Receive(It.IsAny<long>())).Returns(() => { Thread.Sleep(Constants.ReceiverDelayMilliseconds); return message; });
+            var moq = new Mock<IMessageReceiver<T>>();
+            moq.Setup(x => x.Receive()).Returns(() => { Thread.Sleep(Constants.HalfSecond); return message; });
+            moq.Setup(x => x.Receive(It.IsAny<TimeSpan>())).Returns(() => { Thread.Sleep(Constants.HalfSecond); return message; });
+            moq.Setup(x => x.Receive(It.IsAny<long>())).Returns(() => { Thread.Sleep(Constants.HalfSecond); return message; });
 
             return moq.Object;
         }
 
-        public static IMessageReceiver CreateLocalClosedReceiver()
+        public static IMessageReceiver<T> CreateLocalClosedReceiver<T>(Func<T> generator)
         {
-            BrokeredMessage message = new BrokeredMessage(Guid.Empty);
+            T message = generator();
 
-            var moq = new Mock<IMessageReceiver>();
-            moq.Setup(x => x.Receive()).Returns(() => { Thread.Sleep(Constants.ReceiverDelayMilliseconds); return message; });
-            moq.Setup(x => x.Receive(It.IsAny<TimeSpan>())).Returns(() => { Thread.Sleep(Constants.ReceiverDelayMilliseconds); return message; });
-            moq.Setup(x => x.Receive(It.IsAny<long>())).Returns(() => { Thread.Sleep(Constants.ReceiverDelayMilliseconds); return message; });
+            var moq = new Mock<IMessageReceiver<T>>();
+            moq.Setup(x => x.Receive()).Returns(() => { Thread.Sleep(Constants.HalfSecond); return message; });
+            moq.Setup(x => x.Receive(It.IsAny<TimeSpan>())).Returns(() => { Thread.Sleep(Constants.HalfSecond); return message; });
+            moq.Setup(x => x.Receive(It.IsAny<long>())).Returns(() => { Thread.Sleep(Constants.HalfSecond); return message; });
             moq.Setup(x => x.IsClosed).Returns(true);
 
             return moq.Object;

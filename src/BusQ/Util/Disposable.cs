@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Ringo.BusQ
+namespace Ringo.BusQ.Util
 {
     public class Disposable : IDisposable
     {
-        bool disposed;
+        bool _disposed;
 
         protected Action OnDispose;
 
@@ -19,7 +16,7 @@ namespace Ringo.BusQ
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposed)
+            if (_disposed)
                 return;
 
             if (disposing && OnDispose != null)
@@ -27,7 +24,7 @@ namespace Ringo.BusQ
                 OnDispose();
             }
 
-            disposed = true;
+            _disposed = true;
         }
 
         ~Disposable()

@@ -1,17 +1,10 @@
-﻿using Ringo.BusQ.ServiceBus.Messaging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using Ringo.BusQ.ServiceBus.Messaging.Events;
-using Ringo.BusQ.ServiceBus;
-using System.Collections.ObjectModel;
 using Moq;
 using System.Threading;
-using System.Reactive.Linq;
 
 namespace Ringo.BusQ.Tests
 {
-
-
     /// <summary>
     ///This is a test class for ListenerExtensionsTest and is intended
     ///to contain all ListenerExtensionsTest Unit Tests
@@ -19,19 +12,27 @@ namespace Ringo.BusQ.Tests
     [TestClass()]
     public class ListenerExtensionsTest : TestBase
     {
+        ListenerSettings _listenerSettings;
+        ConnectionSettings _connSettings;
+        IMessageReceiver<Order> _receiver;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _listenerSettings = CreateDefaultSettings();
+            _connSettings = CreateDefaultConnection();
+            _receiver = CreateLocalReceiver(() => new Order());
+        }
+
         [TestMethod]
         public void ListenerExtensionsTest_Subscribe_StatusChangedEvent()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
-
             bool onNextCalled = false;
 
             new Listener<Order>()
-                .Set(connSettings)
-                .Set(listenerSettings)
-                .Set(receiver)
+                .Set(_connSettings)
+                .Set(_listenerSettings)
+                .Set(_receiver)
                 .OnStatusChanged(x => { onNextCalled = true; })
                 .Start();
 
@@ -43,18 +44,14 @@ namespace Ringo.BusQ.Tests
         [TestMethod]
         public void ListenerExtensionsTest_Subscribe_MessageReceivedEvent()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
-
             bool onNextCalled = false;
 
             var listener = new Listener<Order>();
 
             listener
-                .Set(connSettings)
-                .Set(listenerSettings)
-                .Set(receiver)
+                .Set(_connSettings)
+                .Set(_listenerSettings)
+                .Set(_receiver)
                 .Subscribe(x => { onNextCalled = true; });
             
             listener.Start();
@@ -67,20 +64,17 @@ namespace Ringo.BusQ.Tests
         [TestMethod]
         public void ListenerExtensionsTest_Subscribe_ReceptionErrorEvent()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-
-            var moq = new Mock<IMessageReceiver>();
+            var moq = new Mock<IMessageReceiver<Order>>();
             moq.Setup(x => x.Receive()).Throws<ApplicationException>();
-            IMessageReceiver receiver = moq.Object;
+            var receiver = moq.Object;
 
             bool onNextCalled = false;
 
             var listener = new Listener<Order>();
 
             listener
-                .Set(connSettings)
-                .Set(listenerSettings)
+                .Set(_connSettings)
+                .Set(_listenerSettings)
                 .Set(receiver)
                 .OnError(x => { onNextCalled = true; });
 

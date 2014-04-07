@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-namespace Ringo.BusQ.ServiceBus.Messaging
+namespace Ringo.BusQ.Util
 {
     internal static class EntityNameHelper
     {
         public static bool ValidateSubQueueName(string subQueueName)
         {
-            return Enumerable.Any<string>(new string[] { "$DeadLetterQueue" }, (Func<string, bool>)(s => s.Equals(subQueueName, StringComparison.OrdinalIgnoreCase)));
+            return new[] { "$DeadLetterQueue" }.Any(s => s.Equals(subQueueName, StringComparison.OrdinalIgnoreCase));
         }
 
         public static string FormatSubscriptionPath(string topicPath, string subscriptionName)
@@ -36,17 +34,14 @@ namespace Ringo.BusQ.ServiceBus.Messaging
         {
             if (!path.Contains("$"))
                 return new string[2] { path, string.Empty };
-            else if (!path.Contains("/") && !path.Contains("|"))
+            if (!path.Contains("/") && !path.Contains("|"))
             {
                 return new string[2] { string.Empty, path };
             }
-            else
-            {
-                int startIndex = path.LastIndexOf("$");
-                if (startIndex == -1)
-                    startIndex = path.LastIndexOf("|");
-                return new string[2] { path.Substring(0, startIndex - 1), path.Substring(startIndex) };
-            }
+            int startIndex = path.LastIndexOf("$", StringComparison.Ordinal);
+            if (startIndex == -1)
+                startIndex = path.LastIndexOf("|", StringComparison.Ordinal);
+            return new[] { path.Substring(0, startIndex - 1), path.Substring(startIndex) };
         }
     }
 }

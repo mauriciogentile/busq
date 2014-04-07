@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Ringo.BusQ.ServiceBus.Messaging;
-using Ringo.BusQ.ServiceBus;
-using Ringo.BusQ.ServiceBus.Messaging.Events;
-using Microsoft.ServiceBus.Messaging;
+using Ringo.BusQ;
 using System.Reactive.Linq;
 
 namespace BusQ.Samples
@@ -20,7 +14,7 @@ namespace BusQ.Samples
             //Configure the listener
             listener
                 .Set("<your-issuer-name>", "<your-secret-key>", "<namespace>")
-                .Set(queueName: "MyQueue")
+                .Set("MyQueue")
                 .OnStatusChanged(x => Console.WriteLine("Listener status changed to " + x.NewStatus))
                 .OnError(x => Console.WriteLine("An error here! " + x.Error))
                 .Where(x => x.CreatedDate > DateTime.Now.AddDays(-1))

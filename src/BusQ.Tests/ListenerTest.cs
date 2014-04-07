@@ -1,212 +1,184 @@
-﻿using Ringo.BusQ;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using Microsoft.ServiceBus.Messaging;
 using System.Threading;
-using Ringo.BusQ.ServiceBus.Messaging;
-using Ringo.BusQ.ServiceBus;
+using Ringo.BusQ.Events;
 using Moq;
-using System.Diagnostics;
-using Ringo.BusQ.ServiceBus.Messaging.Events;
 
 namespace Ringo.BusQ.Tests
 {
     [TestClass()]
     public class ListenerTest : TestBase
     {
+        ListenerSettings _listenerSettings;
+        ConnectionSettings _connSettings;
+        IMessageReceiver<Order> _receiver;
+        IEventBus _eventPublisher;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _listenerSettings = CreateDefaultSettings();
+            _connSettings = CreateDefaultConnection();
+            _receiver = CreateLocalReceiver(() => new Order());
+            _eventPublisher = new DefaultEventBus();
+        }
+
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void Listener_Should_Pause()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
-            IEventBus eventPublisher = new EventPublisher();
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                _receiver, _eventPublisher);
 
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Pause();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void Listener_Should_ListenerResume()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
-            IEventBus eventPublisher = new EventPublisher();
-
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                _receiver, _eventPublisher);
             target.Resume();
             Assert.AreEqual(ListenerStatus.Running, target.Status);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void Listener_Should_Start_And_Stop()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
-            IEventBus eventPublisher = new EventPublisher();
-
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                _receiver, _eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
             Assert.AreEqual(ListenerStatus.Running, target.Status);
-            Thread.Sleep(Constants.ListeningDefaultMilliseconds);
+            Thread.Sleep(Constants.OneSecond);
             target.Stop();
             Assert.AreEqual(ListenerStatus.Stopped, target.Status);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void Listener_Should_Start_And_Stop_And_Call_EventAgregator_Publish_StatusChangedEvent()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
             var moq = new Mock<IEventBus>();
             moq.Setup(x => x.Publish(It.IsAny<StatusChangedEvent>()));
             IEventBus eventPublisher = moq.Object;
 
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                _receiver, eventPublisher);
 
-            Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
-            Assert.AreEqual(ListenerStatus.Running, target.Status);
-            Thread.Sleep(Constants.ListeningDefaultMilliseconds);
+            
+            Thread.Sleep(Constants.OneSecond);
+
             target.Stop();
-            Assert.AreEqual(ListenerStatus.Stopped, target.Status);
 
             moq.Verify(x => x.Publish(It.IsAny<StatusChangedEvent>()), Times.Exactly(2));
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void Listener_Should_Start_And_Stop_And_Call_EventAgregator_Publish_MessageReceivedEvent()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
             var moq = new Mock<IEventBus>();
-            moq.Setup(x => x.Publish(It.IsAny<MessageReceivedEvent<Order>>()));
+            moq.Setup(x => x.Publish(It.IsAny<Order>()));
             IEventBus eventPublisher = moq.Object;
 
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                _receiver, eventPublisher);
 
-            Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
-            Assert.AreEqual(ListenerStatus.Running, target.Status);
-            Thread.Sleep(Constants.ListeningDefaultMilliseconds);
-            target.Stop();
-            Assert.AreEqual(ListenerStatus.Stopped, target.Status);
 
-            moq.Verify(x => x.Publish(It.IsAny<MessageReceivedEvent<Order>>()), Times.AtLeastOnce());
+            Thread.Sleep(Constants.OneSecond);
+            
+            target.Stop();
+
+            moq.Verify(x => x.Publish(It.IsAny<Order>()), Times.AtLeastOnce());
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void Listener_Should_Start_And_Stop_And_Call_EventAgregator_Publish_ReceptionErrorEvent()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-
-            var moq = new Mock<IMessageReceiver>();
+            var moq = new Mock<IMessageReceiver<Order>>();
             moq.Setup(x => x.Receive()).Throws<ApplicationException>();
-            IMessageReceiver receiver = moq.Object;
+            IMessageReceiver<Order> receiver = moq.Object;
 
             var moq2 = new Mock<IEventBus>();
             moq2.Setup(x => x.Publish(It.IsAny<MessageReceivedEvent<Order>>()));
             IEventBus eventPublisher = moq2.Object;
 
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                receiver, eventPublisher);
 
-            Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
-            Assert.AreEqual(ListenerStatus.Running, target.Status);
-            Thread.Sleep(Constants.ListeningDefaultMilliseconds);
+
+            Thread.Sleep(Constants.OneSecond);
+            
             target.Stop();
-            Assert.AreEqual(ListenerStatus.Stopped, target.Status);
 
             moq2.Verify(x => x.Publish(It.IsAny<ReceptionErrorEvent>()), Times.AtLeastOnce());
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void Listener_Should_Start_And_Stop_And_Call_MessagingFactory_CreateMessageReceiver()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalClosedReceiver();
-            IMessageReceiver receiver2 = CreateLocalReceiver();
-
             var moq1 = new Mock<IMessagingFactory>();
-            moq1.Setup(x => x.CreateMessageReceiver(It.IsAny<string>(), It.IsAny<ReceiveMode>())).Returns(receiver2);
+            moq1.Setup(x => x.CreateMessageReceiver<Order>(It.IsAny<string>(), It.IsAny<ReceiveMode>()))
+                .Returns(_receiver);
             IMessagingFactory messagingFactory = moq1.Object;
 
-            IEventBus eventPublisher = new EventPublisher();
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings, null,
+                _eventPublisher, messagingFactory);
 
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher, messagingFactory);
-
-            Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
-            Assert.AreEqual(ListenerStatus.Running, target.Status);
-            Thread.Sleep(Constants.ListeningDefaultMilliseconds);
+            
+            Thread.Sleep(5000);
+            
             target.Stop();
-            Assert.AreEqual(ListenerStatus.Stopped, target.Status);
-
-            moq1.Verify(x => x.CreateMessageReceiver(It.IsAny<string>(), It.IsAny<ReceiveMode>()), Times.Once());
+            
+            moq1.Verify(x => x.CreateMessageReceiver<Order>(It.IsAny<string>(), It.IsAny<ReceiveMode>()), Times.Once());
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void Listener_Should_Start_And_Pause()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
-            IEventBus eventPublisher = new EventPublisher();
-
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                _receiver, _eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
             Assert.AreEqual(ListenerStatus.Running, target.Status);
-            Thread.Sleep(Constants.ListeningDefaultMilliseconds);
+            Thread.Sleep(Constants.OneSecond);
             target.Pause();
             Assert.AreEqual(ListenerStatus.Paused, target.Status);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void Listener_Should_Start_Pause_And_Resume()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
-            IEventBus eventPublisher = new EventPublisher();
-
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                _receiver, _eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
             Assert.AreEqual(ListenerStatus.Running, target.Status);
-            Thread.Sleep(Constants.ListeningDefaultMilliseconds);
+            Thread.Sleep(Constants.OneSecond);
             target.Pause();
             Assert.AreEqual(ListenerStatus.Paused, target.Status);
             target.Resume();
             Assert.AreEqual(ListenerStatus.Running, target.Status);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void Listener_Should_Start_Pause_Resume_And_Stop()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
-            IEventBus eventPublisher = new EventPublisher();
-
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                _receiver, _eventPublisher);
 
             Assert.AreEqual(ListenerStatus.NotStarted, target.Status);
             target.Start();
             Assert.AreEqual(ListenerStatus.Running, target.Status);
-            Thread.Sleep(Constants.ListeningDefaultMilliseconds);
+            Thread.Sleep(Constants.OneSecond);
             target.Pause();
             Assert.AreEqual(ListenerStatus.Paused, target.Status);
             target.Resume();
@@ -215,16 +187,12 @@ namespace Ringo.BusQ.Tests
             Assert.AreEqual(ListenerStatus.Stopped, target.Status);
         }
 
-        [TestMethod()]
+        [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void Listener_Should_Stop()
         {
-            ListenerSettings listenerSettings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = CreateLocalReceiver();
-            IEventBus eventPublisher = new EventPublisher();
-
-            Listener<Order> target = ListenerFactory<Order>.Create(listenerSettings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_listenerSettings, _connSettings,
+                _receiver, _eventPublisher);
             target.Stop();
         }
     }

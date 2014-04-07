@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Ringo.BusQ.ServiceBus.Messaging;
-using Microsoft.ServiceBus.Messaging;
+﻿using Microsoft.ServiceBus.Messaging;
 
-namespace Ringo.BusQ.ServiceBus.Messaging
+namespace Ringo.BusQ
 {
     public interface IMessagingFactory
     {
-        IMessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode receiveMode);
+        IMessageReceiver<T> CreateMessageReceiver<T>(string entityPath, ReceiveMode receiveMode);
         bool IsClosed { get; }
         void Close();
     }

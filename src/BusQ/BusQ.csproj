@@ -63,10 +63,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionSettings.cs" />
-    <Compile Include="Disposable.cs" />
-    <Compile Include="EntityNameHelper.cs" />
+    <Compile Include="Util\Disposable.cs" />
+    <Compile Include="Util\EntityNameHelper.cs" />
     <Compile Include="Events\EventBase.cs" />
-    <Compile Include="Events\EventPublisher.cs" />
+    <Compile Include="Events\DefaultEventBus.cs" />
     <Compile Include="Events\IEventBus.cs" />
     <Compile Include="Events\MessageReceivedEvent.cs" />
     <Compile Include="Events\ReceptionErrorEvent.cs" />

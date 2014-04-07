@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-using System.Text;
+using Ringo.BusQ.Util;
 
-namespace Ringo.BusQ
+namespace Ringo.BusQ.Events
 {
     public class Unsubscriber<T> : Disposable
     {
-        private ConcurrentDictionary<Type, object> _subjects;
-        private Type _subject;
+        private readonly ConcurrentDictionary<Type, object> _subjects;
+        private readonly Type _subject;
 
         public Unsubscriber(ConcurrentDictionary<Type, object> subjects, Type subject)
         {

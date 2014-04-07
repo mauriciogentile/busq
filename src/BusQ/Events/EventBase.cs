@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Ringo.BusQ.ServiceBus.Messaging.Events
+namespace Ringo.BusQ.Events
 {
     public abstract class EventBase
     {
-        public EventBase()
+        protected EventBase()
         {
             Timestamp = DateTime.Now;
         }

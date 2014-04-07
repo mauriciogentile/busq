@@ -1,9 +1,5 @@
-﻿using Ringo.BusQ;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using Ringo.BusQ.ServiceBus.Messaging;
-using Ringo.BusQ.ServiceBus;
-using Ringo.BusQ.ServiceBus.Messaging.Events;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Ringo.BusQ.Events;
 using Moq;
 
 namespace Ringo.BusQ.Tests
@@ -11,135 +7,122 @@ namespace Ringo.BusQ.Tests
     [TestClass()]
     public class ListenerFactoryTest : TestBase
     {
-        [TestMethod()]
+        const string QueueName = "queueName";
+        const string IssuerName = "issuerName";
+        const string IssuerKey = "issuerKey";
+        const string ServiceBusNamespace = "serviceBusNamespace";
+        private const string TopicName = "topicName";
+        private const string SubscriptionName = "subscriptionName";
+
+        ListenerSettings _settings;
+        ConnectionSettings _connSettings;
+        IEventBus _eventPublisher;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _settings = CreateDefaultSettings();
+            _connSettings = CreateDefaultConnection();
+            _eventPublisher = new DefaultEventBus();
+        }
+
+        [TestMethod]
         public void ListenerFactory_Create_Test()
         {
-            string queueName = "queueName";
-            string issuerName = "issuerName";
-            string issuerKey = "issuerKey";
-            string serviceBusNamespace = "serviceBusNamespace";
-            IEventBus eventPublisher = new EventPublisher();
+            Listener<Order> target = ListenerFactory<Order>.Create(QueueName, IssuerName, IssuerKey, ServiceBusNamespace, 
+                _eventPublisher);
 
-            Listener<Order> target = ListenerFactory<Order>.Create(queueName, issuerName, issuerKey, serviceBusNamespace, eventPublisher);
-
-            Assert.AreEqual(queueName, target.ListenerSettings.QueueOrTopicPath);
-            Assert.AreEqual(issuerName, target.ConnectionSettings.IssuerName);
-            Assert.AreEqual(issuerKey, target.ConnectionSettings.IssuerSecretKey);
-            Assert.AreEqual(serviceBusNamespace, target.ConnectionSettings.ServiceBusNamespace);
-            Assert.AreEqual(eventPublisher, target.EventBus);
+            Assert.AreEqual(QueueName, target.ListenerSettings.QueueOrTopicPath);
+            Assert.AreEqual(IssuerName, target.ConnectionSettings.IssuerName);
+            Assert.AreEqual(IssuerKey, target.ConnectionSettings.IssuerSecretKey);
+            Assert.AreEqual(ServiceBusNamespace, target.ConnectionSettings.ServiceBusNamespace);
+            Assert.AreEqual(_eventPublisher, target.EventBus);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerFactory_Create_Test1()
         {
-            ListenerSettings settings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventBus eventPublisher = new EventPublisher();
+            Listener<Order> target = ListenerFactory<Order>.Create(_settings, _connSettings, _eventPublisher);
 
-            Listener<Order> target = ListenerFactory<Order>.Create(settings, connSettings, eventPublisher);
-
-            Assert.AreEqual(settings, target.ListenerSettings);
-            Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventBus);
+            Assert.AreEqual(_settings, target.ListenerSettings);
+            Assert.AreEqual(_connSettings, target.ConnectionSettings);
+            Assert.AreEqual(_eventPublisher, target.EventBus);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerFactory_Create_Test2()
         {
-            ListenerSettings settings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventBus eventPublisher = new EventPublisher();
-            IMessageReceiver receiver = new Mock<IMessageReceiver>().Object;
+            var receiver = new Mock<IMessageReceiver<Order>>().Object;
 
-            Listener<Order> target = ListenerFactory<Order>.Create(settings, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(_settings, _connSettings, receiver, _eventPublisher);
 
-            Assert.AreEqual(settings, target.ListenerSettings);
-            Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventBus);
+            Assert.AreEqual(_settings, target.ListenerSettings);
+            Assert.AreEqual(_connSettings, target.ConnectionSettings);
+            Assert.AreEqual(_eventPublisher, target.EventBus);
             Assert.AreEqual(receiver, target.MessageReceiver);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerFactory_Create_Test3()
         {
-            string topicName = "topicName";
-            string subscriptionName = "subscriptionName";
-            string issuerName = "issuerName";
-            string issuerKey = "issuerKey";
-            string serviceBusNamespace = "serviceBusNamespace";
-            IEventBus eventPublisher = new EventPublisher();
+            Listener<Order> target = ListenerFactory<Order>.Create(TopicName, SubscriptionName, IssuerName, IssuerKey, ServiceBusNamespace, _eventPublisher);
 
-            Listener<Order> target = ListenerFactory<Order>.Create(topicName, subscriptionName, issuerName, issuerKey, serviceBusNamespace, eventPublisher);
-
-            Assert.AreEqual(topicName, target.ListenerSettings.QueueOrTopicPath);
-            Assert.AreEqual(subscriptionName, target.ListenerSettings.SubscriptionName);
-            Assert.AreEqual(issuerName, target.ConnectionSettings.IssuerName);
-            Assert.AreEqual(issuerKey, target.ConnectionSettings.IssuerSecretKey);
-            Assert.AreEqual(serviceBusNamespace, target.ConnectionSettings.ServiceBusNamespace);
-            Assert.AreEqual(eventPublisher, target.EventBus);
+            Assert.AreEqual(TopicName, target.ListenerSettings.QueueOrTopicPath);
+            Assert.AreEqual(SubscriptionName, target.ListenerSettings.SubscriptionName);
+            Assert.AreEqual(IssuerName, target.ConnectionSettings.IssuerName);
+            Assert.AreEqual(IssuerKey, target.ConnectionSettings.IssuerSecretKey);
+            Assert.AreEqual(ServiceBusNamespace, target.ConnectionSettings.ServiceBusNamespace);
+            Assert.AreEqual(_eventPublisher, target.EventBus);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerFactory_Create_Test4()
         {
-            string queueName = "queueName";
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventBus eventPublisher = new EventPublisher();
+            Listener<Order> target = ListenerFactory<Order>.Create(QueueName, _connSettings, _eventPublisher);
 
-            Listener<Order> target = ListenerFactory<Order>.Create(queueName, connSettings, eventPublisher);
-
-            Assert.AreEqual(queueName, target.ListenerSettings.QueueOrTopicPath);
-            Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventBus);
+            Assert.AreEqual(QueueName, target.ListenerSettings.QueueOrTopicPath);
+            Assert.AreEqual(_connSettings, target.ConnectionSettings);
+            Assert.AreEqual(_eventPublisher, target.EventBus);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerFactory_Create_Test5()
         {
-            string queueName = "queueName";
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IMessageReceiver receiver = new Mock<IMessageReceiver>().Object;
-            IEventBus eventPublisher = new EventPublisher();
+            var receiver = new Mock<IMessageReceiver<Order>>().Object;
 
-            Listener<Order> target = ListenerFactory<Order>.Create(queueName, connSettings, receiver, eventPublisher);
+            Listener<Order> target = ListenerFactory<Order>.Create(QueueName, _connSettings, receiver, _eventPublisher);
 
-            Assert.AreEqual(queueName, target.ListenerSettings.QueueOrTopicPath);
-            Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventBus);
+            Assert.AreEqual(QueueName, target.ListenerSettings.QueueOrTopicPath);
+            Assert.AreEqual(_connSettings, target.ConnectionSettings);
+            Assert.AreEqual(_eventPublisher, target.EventBus);
             Assert.AreEqual(receiver, target.MessageReceiver);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerFactory_Create_Test6()
         {
-            string topicName = "topicName";
-            string subscriptionName = "subscriptionName";
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventBus eventPublisher = new EventPublisher();
+            Listener<Order> target = ListenerFactory<Order>.Create(TopicName, SubscriptionName, _connSettings, 
+                _eventPublisher);
 
-            Listener<Order> target = ListenerFactory<Order>.Create(topicName, subscriptionName, connSettings, eventPublisher);
-
-            Assert.AreEqual(topicName, target.ListenerSettings.QueueOrTopicPath);
-            Assert.AreEqual(subscriptionName, target.ListenerSettings.SubscriptionName);
-            Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventBus);
+            Assert.AreEqual(TopicName, target.ListenerSettings.QueueOrTopicPath);
+            Assert.AreEqual(SubscriptionName, target.ListenerSettings.SubscriptionName);
+            Assert.AreEqual(_connSettings, target.ConnectionSettings);
+            Assert.AreEqual(_eventPublisher, target.EventBus);
         }
 
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerFactory_Create_Test7()
         {
-            ListenerSettings settings = CreateDefaultSettings();
-            ConnectionSettings connSettings = CreateDefaultConnection();
-            IEventBus eventPublisher = new EventPublisher();
-            IMessageReceiver receiver = new Mock<IMessageReceiver>().Object;
+            var receiver = new Mock<IMessageReceiver<Order>>().Object;
             IMessagingFactory factory = new Mock<IMessagingFactory>().Object;
 
-            Listener<Order> target = ListenerFactory<Order>.Create(settings, connSettings, receiver, eventPublisher, factory);
+            Listener<Order> target = ListenerFactory<Order>.Create(_settings, _connSettings, receiver, 
+                _eventPublisher, factory);
 
-            Assert.AreEqual(settings, target.ListenerSettings);
-            Assert.AreEqual(connSettings, target.ConnectionSettings);
-            Assert.AreEqual(eventPublisher, target.EventBus);
+            Assert.AreEqual(_settings, target.ListenerSettings);
+            Assert.AreEqual(_connSettings, target.ConnectionSettings);
+            Assert.AreEqual(_eventPublisher, target.EventBus);
             Assert.AreEqual(receiver, target.MessageReceiver);
             Assert.AreEqual(factory, target.MessagingFactory);
         }

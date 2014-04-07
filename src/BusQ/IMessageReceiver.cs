@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.ServiceBus.Messaging;
 
-namespace Ringo.BusQ.ServiceBus.Messaging
+namespace Ringo.BusQ
 {
-    public interface IMessageReceiver
+    public interface IMessageReceiver<out T>
     {
-        BrokeredMessage Receive();
-        BrokeredMessage Receive(TimeSpan pollingTime);
-        BrokeredMessage Receive(long longSeuence);
+        T Receive();
+        T Receive(TimeSpan pollingTime);
+        T Receive(long longSeuence);
         bool IsClosed { get; }
         void Close();
     }

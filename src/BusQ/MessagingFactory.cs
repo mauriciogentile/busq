@@ -1,64 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.ServiceBus;
+using Ringo.BusQ.Util;
 
-namespace Ringo.BusQ.ServiceBus.Messaging
+namespace Ringo.BusQ
 {
-    public class MessagingFactory : IMessagingFactory, IDisposable
+    public class MessagingFactory : Disposable, IMessagingFactory
     {
         readonly Microsoft.ServiceBus.Messaging.MessagingFactory messagingFactoryCore;
-        bool disposed = false;
 
         public MessagingFactory(Uri serviceBusUri, TokenProvider tokenProvider)
         {
-            this.messagingFactoryCore = Microsoft.ServiceBus.Messaging.MessagingFactory.Create(serviceBusUri, tokenProvider);
+            messagingFactoryCore = Microsoft.ServiceBus.Messaging.MessagingFactory.Create(serviceBusUri, tokenProvider);
+            OnDispose = Close;
         }
 
-        public IMessageReceiver CreateMessageReceiver(string entityPath, Microsoft.ServiceBus.Messaging.ReceiveMode receiveMode)
+        public IMessageReceiver<T> CreateMessageReceiver<T>(string entityPath, Microsoft.ServiceBus.Messaging.ReceiveMode receiveMode)
         {
-            var receiverCore = this.messagingFactoryCore.CreateMessageReceiver(entityPath, receiveMode);
-            return new MessageReceiver(receiverCore);
+            var receiverCore = messagingFactoryCore.CreateMessageReceiver(entityPath, receiveMode);
+            return new MessageReceiver<T>(receiverCore);
         }
 
         public bool IsClosed
         {
-            get { return this.messagingFactoryCore.IsClosed; }
+            get { return messagingFactoryCore.IsClosed; }
         }
 
         public void Close()
         {
-            if (!this.messagingFactoryCore.IsClosed)
-                this.messagingFactoryCore.Close();
+            if (!messagingFactoryCore.IsClosed)
+                messagingFactoryCore.Close();
         }
-
-        #region Disposal
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                Close();
-            }
-
-            disposed = true;
-        }
-
-        ~MessagingFactory()
-        {
-            Dispose(false);
-        }
-
-        #endregion
     }
 }

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.ServiceBus.Messaging;
-using Microsoft.ServiceBus;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
-using Ringo.BusQ.ServiceBus.Messaging.Events;
+using Microsoft.ServiceBus;
+using Microsoft.ServiceBus.Messaging;
+using Ringo.BusQ.Events;
+using Ringo.BusQ.Util;
 
-namespace Ringo.BusQ.ServiceBus.Messaging
+namespace Ringo.BusQ
 {
     public enum ListenerStatus
     {
@@ -17,23 +18,17 @@ namespace Ringo.BusQ.ServiceBus.Messaging
         Stopped
     }
 
-    public class Listener<T> : Disposable, IListener, IObservable<T>
+    public class Listener<T> : Disposable, IListener, IObservable<T> where T : class
     {
-        readonly static object syncLock;
-        readonly static Dictionary<string, IMessageReceiver> receivers;
+        readonly static object statusLock = new object();
+        readonly static Dictionary<string, IMessageReceiver<T>> _receivers = new Dictionary<string, IMessageReceiver<T>>();
 
         internal IEventBus EventBus { get; set; }
         internal ListenerSettings ListenerSettings { get; set; }
         internal ConnectionSettings ConnectionSettings { get; set; }
-        internal IMessageReceiver MessageReceiver { get; set; }
+        internal IMessageReceiver<T> MessageReceiver { get; set; }
         internal IMessagingFactory MessagingFactory { get; set; }
         public ListenerStatus Status { get; private set; }
-
-        static Listener()
-        {
-            receivers = new Dictionary<string, IMessageReceiver>();
-            syncLock = new object();
-        }
 
         public Listener()
             : this(null, null, null, null, null)
@@ -45,13 +40,13 @@ namespace Ringo.BusQ.ServiceBus.Messaging
         {
         }
 
-        internal Listener(ListenerSettings listenerSettings, ConnectionSettings connSettings, IMessageReceiver receiver,
+        internal Listener(ListenerSettings listenerSettings, ConnectionSettings connSettings, IMessageReceiver<T> receiver,
             IEventBus eventPublisher, IMessagingFactory messagingFactory)
         {
             ListenerSettings = listenerSettings;
             ConnectionSettings = connSettings;
             MessageReceiver = receiver;
-            EventBus = eventPublisher == null ? new EventPublisher() : eventPublisher;
+            EventBus = eventPublisher ?? new DefaultEventBus();
             MessagingFactory = messagingFactory;
             Status = ListenerStatus.NotStarted;
             OnDispose = () => MessagingFactory.Close();
@@ -60,7 +55,7 @@ namespace Ringo.BusQ.ServiceBus.Messaging
         public void Start()
         {
             ChangeStatus(ListenerStatus.Running);
-            Task.Factory.StartNew(() => Listen());
+            Task.Factory.StartNew(Listen);
         }
 
         public void Stop()
@@ -85,7 +80,7 @@ namespace Ringo.BusQ.ServiceBus.Messaging
 
         protected virtual void ReceiveMessage()
         {
-            BrokeredMessage message = null;
+            T message;
 
             var receiver = GetOrCreateMessageReceiver();
 
@@ -110,10 +105,7 @@ namespace Ringo.BusQ.ServiceBus.Messaging
             else
             {
                 Debug.WriteLine("Listener receiving message");
-                EventBus.Publish(new MessageReceivedEvent<T>()
-                {
-                    Message = message.GetBody<T>()
-                });
+                EventBus.Publish(message);
             }
         }
 
@@ -146,20 +138,21 @@ namespace Ringo.BusQ.ServiceBus.Messaging
 
         void ChangeStatus(ListenerStatus newStatus)
         {
-            lock (syncLock)
+            lock (statusLock)
             {
                 if (Status == newStatus)
                 {
                     return;
                 }
-                else if ((newStatus == ListenerStatus.Paused || newStatus == ListenerStatus.Stopped) && Status != ListenerStatus.Running)
+                if ((newStatus == ListenerStatus.Paused || newStatus == ListenerStatus.Stopped) 
+                    && Status != ListenerStatus.Running)
                 {
                     throw new InvalidOperationException("Listener is not running");
                 }
 
                 Status = newStatus;
 
-                EventBus.Publish(new StatusChangedEvent() { NewStatus = Status });
+                EventBus.Publish(new StatusChangedEvent { NewStatus = Status });
 
                 Debug.WriteLine("Listener status is '{0}'", Status);
             }
@@ -175,10 +168,7 @@ namespace Ringo.BusQ.ServiceBus.Messaging
             {
                 return ListenerSettings.QueueOrTopicPath;
             }
-            else
-            {
-                return EntityNameHelper.FormatSubscriptionPath(ListenerSettings.QueueOrTopicPath, ListenerSettings.SubscriptionName);
-            }
+            return EntityNameHelper.FormatSubscriptionPath(ListenerSettings.QueueOrTopicPath, ListenerSettings.SubscriptionName);
         }
 
         IMessagingFactory GetOrCreateMessagingFactory()
@@ -193,9 +183,9 @@ namespace Ringo.BusQ.ServiceBus.Messaging
             return MessagingFactory;
         }
 
-        IMessageReceiver GetOrCreateMessageReceiver()
+        IMessageReceiver<T> GetOrCreateMessageReceiver()
         {
-            lock (syncLock)
+            lock (statusLock)
             {
                 string entityPath = GetEntityPath();
 
@@ -206,18 +196,18 @@ namespace Ringo.BusQ.ServiceBus.Messaging
 
                 var factory = GetOrCreateMessagingFactory();
 
-                if (receivers.ContainsKey(entityPath) && receivers[entityPath].IsClosed)
+                if (_receivers.ContainsKey(entityPath) && _receivers[entityPath].IsClosed)
                 {
-                    receivers.Remove(entityPath);
+                    _receivers.Remove(entityPath);
                 }
 
-                if (!receivers.ContainsKey(entityPath))
+                if (!_receivers.ContainsKey(entityPath))
                 {
-                    var receiver = factory.CreateMessageReceiver(entityPath, ListenerSettings.ReceiveMode.GetValueOrDefault(ReceiveMode.ReceiveAndDelete));
-                    receivers.Add(entityPath, receiver);
+                    var receiver = factory.CreateMessageReceiver<T>(entityPath, ListenerSettings.ReceiveMode.GetValueOrDefault(ReceiveMode.ReceiveAndDelete));
+                    _receivers.Add(entityPath, receiver);
                 }
 
-                MessageReceiver = receivers[entityPath];
+                MessageReceiver = _receivers[entityPath];
 
                 return MessageReceiver;
             }
