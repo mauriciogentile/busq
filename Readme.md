@@ -35,5 +35,3 @@ listener.Dispose();
 ```
 PM> Install-Package BusQ 
 ```
-
-##Have fun!
